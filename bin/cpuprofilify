@@ -24,11 +24,11 @@ function usage() {
   fs.createReadStream(usageFile).pipe(process.stdout);
 }
 
-var flags = [ 'shortStack' , 'unresolveds' , 'sysinternals' , 'v8internals' , 'v8gc', 'optimizationinfo' ]
+var flags = [ 'shortStack' , 'unresolveds' , 'sysinternals' , 'v8internals' , 'v8gc' ]
   , negatedFlags = flags.map(function negate(x) { return 'no' + x })
 
 var argv = minimist(process.argv.slice(2)
-  , { boolean: flags.concat(negatedFlags).concat([ 'help', 'type' ]) }
+  , { boolean: flags.concat(negatedFlags).concat([ 'help' ]), string: ['type'] }
 );
 
 if (argv.help) return usage();
@@ -40,10 +40,19 @@ function considerFlag(name) {
 }
 flags.forEach(considerFlag);
 
+if (argv.type) {
+    var types = ['perf', 'instruments', 'cpuprofile'];
+    if(types.indexOf(argv.type) < 0) {
+      cpuprofilify.emit('warn', 'type option suplied', argv.type, 'but available', types);
+    } else {
+      opts.type = argv.type;
+    }
+}
+
 var bufs = [];
 process.stdin
   .on('data', function ondata(d) {
-    bufs.push(d);  
+    bufs.push(d);
   })
   .on('error', onmsg('error'))
   .on('end', function onend() {
